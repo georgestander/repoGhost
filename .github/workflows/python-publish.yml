@@ -34,3 +34,12 @@ jobs:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
       run: twine upload dist/*
+      
+    - name: Create GitHub Release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        VERSION=$(python setup.py --version)
+        gh release create v${VERSION} ./dist/* \
+          --title "Release v${VERSION}" \
+          --generate-notes
