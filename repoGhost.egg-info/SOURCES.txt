@@ -1,7 +1,11 @@
+.gitignore
 LICENSE
 README.md
 pyproject.toml
+requirements.txt
+.github/workflows/python-publish.yml
 repoGhost/__init__.py
+repoGhost/_version.py
 repoGhost/cli.py
 repoGhost.egg-info/PKG-INFO
 repoGhost.egg-info/SOURCES.txt
@@ -9,4 +13,6 @@ repoGhost.egg-info/dependency_links.txt
 repoGhost.egg-info/entry_points.txt
 repoGhost.egg-info/requires.txt
 repoGhost.egg-info/top_level.txt
+scripts/tag_version.sh
+tests/__init__.py
 tests/test_cli.py
