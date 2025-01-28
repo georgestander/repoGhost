@@ -107,8 +107,8 @@ See `requirements.txt`. Python 3.7+ recommended.
 
 1. Clone this repo:
    ```bash
-   git clone https://github.com/your_username/repo_summarizer.git
-   cd repo_summarizer
+   git clone https://github.com/georgestander/repoGhost.git
+   cd repoGhost
    ```
 2. Install in editable mode:
    ```bash
@@ -116,7 +116,7 @@ See `requirements.txt`. Python 3.7+ recommended.
    ```
 3. Verify the CLI is installed:
    ```bash
-   repo-summarizer --help
+   repoGhost --help
    ```
 
 ## License
