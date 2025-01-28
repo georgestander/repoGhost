@@ -150,7 +150,7 @@ def process_repository(repo_path):
     """
     console.print(Panel.fit(
         Text("🚀 Repository Summarizer", justify="center", style="bold cyan"),
-        subtitle="Let's make your code speak!"
+        subtitle="Let's make your code talk!"
     ))
     
     # Ensure we have an absolute path
