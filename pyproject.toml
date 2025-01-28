@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=45", "wheel", "setuptools_scm>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "repoGhost"
-version = "0.1.0"
+dynamic = ["version"]
 description = "CLI tool to summarize code in a repo."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -30,3 +30,6 @@ repoGhost = "repoGhost.cli:main"
 
 [tool.setuptools]
 packages = ["repoGhost"]
+
+[tool.setuptools_scm]
+write_to = "repoGhost/_version.py"
