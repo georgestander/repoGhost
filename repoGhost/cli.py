@@ -7,6 +7,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskPr
 from rich.panel import Panel
 from rich.text import Text
 import hashlib
+import sys
 
 # Initialize rich console
 console = Console()
@@ -36,6 +37,7 @@ def valid_source_file(file_path):
     """
     _, ext = os.path.splitext(file_path)
     filename = os.path.basename(file_path)
+    
     return (
         ext.lower() in VALID_EXTENSIONS
         and ext.lower() not in EXCLUDED_EXTENSIONS
@@ -48,12 +50,18 @@ def scan_repo(repo_path):
     Skips excluded directories and files.
     """
     file_paths = []
-    for root, dirs, files in os.walk(repo_path):
-        dirs[:] = [d for d in dirs if d not in EXCLUDED_DIRS]  # Skip excluded directories
-        for f in files:
-            fp = os.path.join(root, f)
-            if valid_source_file(fp):
-                file_paths.append(fp)
+    try:
+        for root, dirs, files in os.walk(repo_path):
+            # Filter directories
+            dirs[:] = [d for d in dirs if d not in EXCLUDED_DIRS]
+            
+            for f in files:
+                fp = os.path.join(root, f)
+                if valid_source_file(fp):
+                    file_paths.append(fp)
+    except Exception as e:
+        console.print(f"[red]Error during repository scan: {str(e)}[/red]")
+    
     return file_paths
 
 def chunk_file(file_path, lines_per_chunk=50):
@@ -94,6 +102,7 @@ def load_hash_cache():
         with open(HASH_CACHE_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     except:
+        console.print(f"[red]Error loading hash cache from file {HASH_CACHE_FILE}[/red]")
         return {}
 
 def save_hash_cache(cache_data):
@@ -134,12 +143,19 @@ def summarize_chunk(chunk, progress=None):
         console.print(f"[red]❌ {error_msg}[/red]")
         return error_msg
 
-def main(repo_path="./my_repo"):
+def process_repository(repo_path):
+    """
+    Process the repository at the given path.
+    This contains the main logic previously in the main() function.
+    """
     console.print(Panel.fit(
         Text("🚀 Repository Summarizer", justify="center", style="bold cyan"),
         subtitle="Let's make your code speak!"
     ))
-
+    
+    # Ensure we have an absolute path
+    repo_path = os.path.abspath(repo_path)
+    
     # Load the existing hash cache to skip unchanged files
     hash_cache = load_hash_cache()
     
@@ -229,16 +245,32 @@ def main(repo_path="./my_repo"):
         else:
             console.print("[red]⚠️ No summaries generated or found.[/red]")
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(
         description="Summarize a local repo's code in chunked form."
     )
     parser.add_argument(
-        "--repo_path",
+        "repo_path",
         type=str,
-        default="./my_repo",
         help="Path to the local repository you want to summarize."
     )
+    
+    # Parse arguments
     args = parser.parse_args()
-    main(args.repo_path)
+    
+    # Convert to absolute path if needed
+    repo_path = os.path.abspath(args.repo_path)
+    
+    # Verify path exists
+    if not os.path.exists(repo_path):
+        console.print(f"[red]Error: Path does not exist: {repo_path}[/red]")
+        sys.exit(1)
+    
+    if not os.path.isdir(repo_path):
+        console.print(f"[red]Error: Path is not a directory: {repo_path}[/red]")
+        sys.exit(1)
+    
+    process_repository(repo_path)
 
+if __name__ == "__main__":
+    main()

@@ -9,3 +9,4 @@ repoGhost.egg-info/dependency_links.txt
 repoGhost.egg-info/entry_points.txt
 repoGhost.egg-info/requires.txt
 repoGhost.egg-info/top_level.txt
+tests/test_cli.py
