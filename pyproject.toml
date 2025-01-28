@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "repoGhost"
+version = "0.1.0"
+description = "CLI tool to summarize code in a repo."
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [
+  { name="George"}
+]
+requires-python = ">=3.8"
+keywords = ["openai", "repo", "summaries", "cli"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License"
+]
+dependencies = [
+  "openai>=1.0.0",
+  "click>=8.0.0",
+  "tqdm>=4.65.0",
+  "pyperclip>=1.8.2",
+  "rich>=13.0.0"
+]
+
+[project.scripts]
+repoGhost = "repoGhost.cli:main"
+
+[tool.setuptools]
+packages = ["repoGhost"]

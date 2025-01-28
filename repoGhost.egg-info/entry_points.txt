@@ -1,0 +1,2 @@
+[console_scripts]
+repoGhost = repoGhost.cli:main
