@@ -39,7 +39,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        VERSION=$(python setup.py --version)
+        VERSION=$(python -c "import tomli; print(tomli.load(open('pyproject.toml', 'rb'))['project']['version'])")
         gh release create v${VERSION} ./dist/* \
           --title "Release v${VERSION}" \
           --generate-notes
