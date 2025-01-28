@@ -1,6 +1,6 @@
 Metadata-Version: 2.2
 Name: repoGhost
-Version: 0.1.2.post1
+Version: 0.1.2.post1.dev0
 Summary: CLI tool to summarize code in a repo.
 Author: George
 License: MIT License
