@@ -8,6 +8,7 @@ from rich.panel import Panel
 from rich.text import Text
 import hashlib
 import sys
+import datetime
 
 # Initialize rich console
 console = Console()
@@ -143,6 +144,47 @@ def summarize_chunk(chunk, progress=None):
         console.print(f"[red]❌ {error_msg}[/red]")
         return error_msg
 
+def generate_repo_map(repo_path, max_depth=5):
+    """
+    Generate hierarchical repository structure with depth limiting
+    """
+    repo_map = {
+        'name': os.path.basename(repo_path),
+        'type': 'directory',
+        'path': '.',
+        'children': []
+    }
+    
+    def traverse(current_path, node, current_depth=0):
+        if current_depth >= max_depth:
+            return
+        try:
+            with os.scandir(current_path) as entries:
+                for entry in entries:
+                    if entry.name in EXCLUDED_DIRS:
+                        continue
+                    
+                    if entry.is_dir():
+                        child = {
+                            'name': entry.name,
+                            'type': 'directory',
+                            'path': os.path.relpath(entry.path, repo_path),
+                            'children': []
+                        }
+                        node['children'].append(child)
+                        traverse(entry.path, child, current_depth + 1)
+                    elif valid_source_file(entry.path):
+                        node['children'].append({
+                            'name': entry.name,
+                            'type': 'file',
+                            'path': os.path.relpath(entry.path, repo_path)
+                        })
+        except Exception as e:
+            console.print(f"[yellow]⚠️ Directory traversal error: {str(e)}[/yellow]")
+    
+    traverse(repo_path, repo_map)
+    return repo_map
+
 def process_repository(repo_path):
     """
     Process the repository at the given path.
@@ -225,12 +267,23 @@ def process_repository(repo_path):
             progress.remove_task(file_task)
             progress.update(overall_task, advance=1)
 
-        # Save combined summaries to JSON
-        save_task = progress.add_task("[yellow]💾 Saving summaries to JSON...[/yellow]", total=1)
-        with open(SUMMARIES_OUTPUT, "w", encoding="utf-8") as jf:
-            json.dump(combined_summaries, jf, indent=2)
-        progress.update(save_task, completed=1)
-        console.print("[green]✅ Summaries saved successfully![/green]")
+        # Generate repository structure
+        repo_structure = generate_repo_map(repo_path)
+        
+        # Create combined output structure
+        combined_output = {
+            "repository_map": repo_structure,
+            "file_summaries": combined_summaries,
+            "metadata": {
+                "generated_at": datetime.datetime.now().isoformat(),
+                "max_depth": 5,
+                "repo_ghost_version": "1.1" 
+            }
+        }
+
+        # Save combined output
+        with open(SUMMARIES_OUTPUT, "w", encoding="utf-8") as f:
+            json.dump(combined_output, f, indent=2)
 
         # Save the updated hash cache
         save_hash_cache(hash_cache)
