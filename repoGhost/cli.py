@@ -305,25 +305,24 @@ def main():
     parser.add_argument(
         "repo_path",
         type=str,
-        help="Path to the local repository you want to summarize."
+        nargs='?',
+        default=os.getcwd(),
+        help="Path to the local repository you want to summarize (default: current directory)."
     )
     
     # Parse arguments
     args = parser.parse_args()
     
-    # Convert to absolute path if needed
-    repo_path = os.path.abspath(args.repo_path)
-    
     # Verify path exists
-    if not os.path.exists(repo_path):
-        console.print(f"[red]Error: Path does not exist: {repo_path}[/red]")
+    if not os.path.exists(args.repo_path):
+        console.print(f"[red]Error: Path does not exist: {args.repo_path}[/red]")
         sys.exit(1)
     
-    if not os.path.isdir(repo_path):
-        console.print(f"[red]Error: Path is not a directory: {repo_path}[/red]")
+    if not os.path.isdir(args.repo_path):
+        console.print(f"[red]Error: Path is not a directory: {args.repo_path}[/red]")
         sys.exit(1)
     
-    process_repository(repo_path)
+    process_repository(args.repo_path)
 
 if __name__ == "__main__":
     main()

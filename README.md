@@ -1,6 +1,6 @@
 # 👻 repoGhost
 
-`repoGhost` is a command-line tool to scan a local code repository, split files into chunks, and summarize each chunk using an LLM (e.g., GPT-4). Summaries are stored in `summaries.json`, and repeated runs skip unchanged files to save cost.
+`repoGhost` is a command-line tool to scan a local code repository, split files into chunks, and summarize each chunk using an LLM (e.g., GPT-4o). Summaries are stored in `summaries.json`, and repeated runs skip unchanged files to save cost.
 
 ## Features
 
@@ -8,6 +8,8 @@
 - **Auto `.gitignore`**: Automatically adds the cache and summary files to `.gitignore` if found.
 - **Clipboard**: Copies the last summary to your clipboard for easy reference.
 - **Configurable chunk size**: Choose how many lines per chunk.
+- **Repository Map**: Generates a hierarchical view of your repository structure at the top of the summary.
+- **CWD Defaults**: Defaults to analyzing the current working directory if no path is specified.
 
 ## Installation
 
@@ -15,21 +17,30 @@
 pip install repoGhost
 ```
 
-
 ## Usage
 
+Simply run in your project directory:
 ```bash
-repoGhost --repo_path /path/to/your/repo --lines_per_chunk 30
+repoGhost
+```
+
+Or specify a different repository path:
+```bash
+repoGhost /path/to/your/repo
 ```
 
 ### Command-Line Arguments
-- `--repo_path`: Path to the local repo (default `./my_repo`).
+- `--repo_path`: Optional path to the local repo (defaults to current directory).
 - `--lines_per_chunk`: Lines per chunk for summarizing (default `30`).
 
 ### Example
 
 ```bash
-repoGhost --repo_path ./my_project --lines_per_chunk 50
+# Analyze current directory
+repoGhost
+
+# Analyze specific directory with custom chunk size
+repoGhost /path/to/project --lines_per_chunk 50
 ```
 
 This generates two files in the specified repo path:
