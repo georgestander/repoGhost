@@ -1,11 +1,12 @@
 # 👻 repoGhost
 
-`repoGhost` is a command-line tool to scan a local code repository, split files into chunks, and summarize each chunk using an LLM (e.g., GPT-4o). Summaries are stored in `summaries.json`, and repeated runs skip unchanged files to save cost.
+`repoGhost` is a command-line tool to scan a local code repository, split files into chunks, and summarize each chunk using an LLM (e.g., GPT-4o). Summaries are stored in a dedicated `summary` directory, and repeated runs skip unchanged files to save cost.
 
 ## Features
 
 - **Hash-based caching**: Skips unchanged files (no repeated LLM calls).
-- **Auto `.gitignore`**: Automatically adds the cache and summary files to `.gitignore` if found.
+- **Auto `.gitignore`**: Automatically adds the summary directory to `.gitignore` if found.
+- **Dedicated Summary Directory**: Creates a `summary` folder for all outputs.
 - **Clipboard**: Copies the last summary to your clipboard for easy reference.
 - **Configurable chunk size**: Choose how many lines per chunk.
 - **Repository Map**: Generates a hierarchical view of your repository structure at the top of the summary.
@@ -43,7 +44,7 @@ repoGhost
 repoGhost /path/to/project --lines_per_chunk 50
 ```
 
-This generates two files in the specified repo path:
+This generates a summary directory containing:
 - `hash_cache.json`: Contains file hashes and chunk summaries (used to skip unchanged files).
 - `summaries.json`: Contains all chunk summaries (the final output).
 
@@ -62,6 +63,7 @@ EXCLUDED_DIRS = {
     ".git",
     "venv",
     "node_modules",
+    "summary",  # Excludes the summary directory itself
 }
 EXCLUDED_EXTENSIONS = {
     ".pyc", ".css", ".scss", ".png", ".jpg", ".jpeg", ".svg", ".sqlite3"
@@ -82,8 +84,8 @@ openai.ChatCompletion.create(
     messages=[
         {"role": "user", "content": f"Please summarize this code chunk concisely:\n\n{chunk}"}
     ],
-    temperature=0.3,
-    max_tokens=150
+    temperature=0.1,
+    max_tokens=1000
 )
 ```
 
