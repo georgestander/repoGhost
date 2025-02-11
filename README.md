@@ -30,9 +30,12 @@ Or specify a different repository path:
 repoGhost /path/to/your/repo
 ```
 
-### Command-Line Arguments
+### Parameters
+
 - `--repo_path`: Optional path to the local repo (defaults to current directory).
 - `--lines_per_chunk`: Lines per chunk for summarizing (default `30`).
+- `--context-size, -c`: Controls the snippet size extracted from files. The default value is 8192 characters, but users can set it higher up to a maximum of 32768. If an unsupported value (e.g., negative or too large) is supplied, the application exits with an error message.
+- `--api-key`: Provide the OpenAI API key. If not provided, the tool checks the OPENAI_API_KEY environment variable or the config file at ~/.repoghostconfig.json.
 
 ### Example
 
@@ -42,6 +45,9 @@ repoGhost
 
 # Analyze specific directory with custom chunk size
 repoGhost /path/to/project --lines_per_chunk 50
+
+# Analyze specific directory with custom context size
+repoGhost /path/to/project -c 16384
 ```
 
 This generates a summary directory containing:
@@ -49,6 +55,15 @@ This generates a summary directory containing:
 - `summaries.json`: Contains all chunk summaries (the final output).
 
 The last chunk’s summary is copied to your clipboard automatically.
+
+## API Key Configuration
+
+The tool will look for your OpenAI API key in the following order:
+ 1. Via the command-line argument `--api-key`.
+ 2. Via the environment variable `OPENAI_API_KEY`.
+ 3. Via a configuration file located at `~/.repoghostconfig.json`.
+
+If no API key is found, the tool will exit with an error message. This allows you to avoid passing the API key every time you run the command.
 
 ## Constants
 

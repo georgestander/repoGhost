@@ -2,7 +2,7 @@ import os
 import json
 import argparse
 import pyperclip
-from rich.console import Console
+from rich.console import Console, Group
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
 from rich.panel import Panel
 from rich.text import Text
@@ -30,6 +30,7 @@ EXCLUDED_DIRS = {
     "__pycache__",
     ".git",
     "venv",
+    "docs",
     "node_modules",
     "summary",   # Exclude the summary folder from scanning
 }
@@ -238,15 +239,17 @@ def generate_repo_map(repo_path, max_depth=10):
     traverse(repo_path, repo_map)
     return repo_map
 
-def process_repository(repo_path):
+def process_repository(repo_path, context_size, api_key):
     """
     Process the repository at the given path.
     This contains the main logic previously in the main() function.
     """
-    console.print(Panel.fit(
-        Text("🚀 Repository Summarizer", justify="center", style="bold cyan"),
-        subtitle="Let's make your code talk to some LLMs!"
-    ))
+    welcome_panel = Panel.fit(
+         Text("🚀 Repository Summarizer", justify="center", style="bold cyan"),
+         subtitle="Let's make your code talk to some LLMs!"
+    )
+    group = Group(f"[green]Context size set to: {context_size}[/green]", welcome_panel)
+    console.print(group)
     
     # Ensure we have an absolute path
     repo_path = os.path.abspath(repo_path)
@@ -374,9 +377,35 @@ def main():
         default=os.getcwd(),
         help="Path to the local repository you want to summarize (default: current directory)."
     )
-    
+    parser.add_argument("--context-size", "-c", type=int, default=8192, help="Specify the context size in number of characters to include in file snippets. Maximum allowed is 32768.")
+    parser.add_argument("--api-key", type=str, default=None, help="OpenAI API key. If not provided, the tool checks the OPENAI_API_KEY environment variable or config file (~/.repoghostconfig.json).")
+
     # Parse arguments
     args = parser.parse_args()
+
+    # Retrieve API key: check command line, then environment variable, then config file
+    api_key = args.api_key or os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        config_path = os.path.expanduser("~/.repoghostconfig.json")
+        if os.path.exists(config_path):
+            try:
+                with open(config_path, 'r') as f:
+                    config = json.load(f)
+                api_key = config.get("OPENAI_API_KEY")
+            except Exception as e:
+                console.print(f"[red]Error reading config file: {e}[/red]")
+        
+    if not api_key:
+        console.print("[red]Error: OpenAI API key not provided. Please set it via --api-key, the OPENAI_API_KEY environment variable, or in ~/.repoghostconfig.json.[/red]")
+        sys.exit(1)
+
+    # Store the retrieved API key in args for further use if needed
+    args.api_key = api_key
+
+    # Validate context size
+    if args.context_size <= 0 or args.context_size > 32768:
+        print("Error: Context size must be a positive integer not exceeding 32768.")
+        sys.exit(1)
     
     # Verify path exists
     if not os.path.exists(args.repo_path):
@@ -387,7 +416,7 @@ def main():
         console.print(f"[red]Error: Path is not a directory: {args.repo_path}[/red]")
         sys.exit(1)
     
-    process_repository(args.repo_path)
+    process_repository(args.repo_path, args.context_size, args.api_key)
 
 if __name__ == "__main__":
     main()

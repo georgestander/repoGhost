@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "repoGhost"
-version = "0.2.2"
+version = "0.2.3"
 description = "CLI tool to summarize code in a repo."
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [
-  { name="George"}
+  { name="George Stander"}
 ]
 requires-python = ">=3.8"
 keywords = ["openai", "repo", "summaries", "cli"]
