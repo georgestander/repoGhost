@@ -37,7 +37,7 @@ EXCLUDED_EXTENSIONS = {
     ".pyc", ".css", ".scss", ".png", ".jpg", ".jpeg", ".svg", ".sqlite3"
 }
 EXCLUDED_FILES = {"manage.py", "wsgi.py", "asgi.py", "package-lock.json"}
-VALID_EXTENSIONS = {".py", ".js", ".html", ".json"}
+VALID_EXTENSIONS = {".py", ".js", ".html", ".json", ".tsx", ".jsx"}
 
 def update_gitignore(repo_path):
     """
@@ -146,36 +146,58 @@ def save_hash_cache(cache_data):
 
 def summarize_chunk(chunk, progress=None):
     """
-    Summarize a code chunk using OpenAI's GPT-4o model.
-    Assumes OPENAI_API_KEY is set in environment variables.
+    Summarize a code chunk using OpenAI's GPT-4 model and extract short snippet references.
+    Returns a dict with 'summary' (str) and 'snippets' (list).
     """
     from openai import OpenAI
+    import json
     import os
     
-    client = OpenAI()  # Uses OPENAI_API_KEY from environment by default
-    
+    client = OpenAI()
+
+    prompt_text = f"""You are an expert code reviewer. 
+1. Summarize this code chunk as concisely as possible, focusing on the main idea. 
+2. Identify and provide short snippet references (like function or class definitions, or key logic). 
+3. Please output your response in valid JSON with the fields "summary" and "snippets" (an array of snippet texts).
+
+Code chunk:
+{chunk}"""
+
     try:
         if progress:
             progress.update(progress.task_ids[-1], description="[yellow]🤔 Analyzing with AI...[/yellow]")
-        
+
         completion = client.chat.completions.create(
-            model="gpt-4o",  
-            store=True,  # Store the completion
+            model="gpt-4",
             messages=[
-                {
-                    "role": "user",
-                    "content": f"Please summarize this code chunk concisely:\n\n{chunk}"
-                }
+                {"role": "user", "content": prompt_text}
             ]
         )
+
+        response_content = completion.choices[0].message.content.strip()
         
-        return completion.choices[0].message.content.strip()
+        try:
+            parsed = json.loads(response_content)
+            summary_text = parsed.get("summary", "")
+            snippets = parsed.get("snippets", [])
+        except json.JSONDecodeError:
+            summary_text = response_content
+            snippets = []
+        
+        return {
+            "summary": summary_text,
+            "snippets": snippets
+        }
+        
     except Exception as e:
         error_msg = f"Error summarizing chunk: {str(e)}"
         console.print(f"[red]❌ {error_msg}[/red]")
-        return error_msg
+        return {
+            "summary": error_msg,
+            "snippets": []
+        }
 
-def generate_repo_map(repo_path, max_depth=5):
+def generate_repo_map(repo_path, max_depth=10):
     """
     Generate hierarchical repository structure with depth limiting
     """
@@ -270,7 +292,8 @@ def process_repository(repo_path):
                     combined_summaries.append({
                         "file": f,
                         "chunk_id": s["chunk_id"],
-                        "summary": s["summary"]
+                        "summary": s["summary"],
+                        "snippets": s.get("snippets", [])
                     })
             else:
                 # File changed or not in cache => re-summarize
@@ -281,16 +304,24 @@ def process_repository(repo_path):
                         f"[blue]Analyzing chunk {idx+1}/{len(chunks)}...",
                         total=1
                     )
-                    summary = summarize_chunk(chunk_content, progress)
-                    new_summaries.append({"chunk_id": idx, "summary": summary})
+                    result = summarize_chunk(chunk_content, progress)
+                    summary_text = result["summary"]
+                    snippets = result["snippets"]
+                    
+                    new_summaries.append({
+                        "chunk_id": idx,
+                        "summary": summary_text,
+                        "snippets": snippets
+                    })
                     combined_summaries.append({
                         "file": f,
                         "chunk_id": idx,
-                        "summary": summary
+                        "summary": summary_text,
+                        "snippets": snippets
                     })
+                    
                     progress.update(chunk_task, completed=1)
                     progress.remove_task(chunk_task)
-
                 # Update hash_cache after summarizing
                 hash_cache[f] = {
                     "hash": current_hash,
