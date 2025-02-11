@@ -1,0 +1,49 @@
+name: Build and Publish to PyPI
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags
+
+permissions:
+  contents: write  # This is needed for creating releases
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine pytest pytest-cov tomli
+        pip install -e .
+    
+    - name: Run tests
+      run: |
+        pytest --cov=repoGhost tests/
+    
+    - name: Build package
+      run: python -m build
+
+    - name: Create GitHub Release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        VERSION=$(python -c "import tomli; print(tomli.load(open('pyproject.toml', 'rb'))['project']['version'])")
+        gh release create v${VERSION} ./dist/* \
+          --title "Release v${VERSION}" \
+          --generate-notes
+    
+    - name: Publish to PyPI
+      continue-on-error: true  # Continue even if PyPI upload fails
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      run: twine upload dist/*
