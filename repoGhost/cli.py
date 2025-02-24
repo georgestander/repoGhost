@@ -156,10 +156,17 @@ def summarize_chunk(chunk, progress=None):
     
     client = OpenAI()
 
-    prompt_text = f"""You are an expert code reviewer. 
-1. Summarize this code chunk as concisely as possible, focusing on the main idea. 
-2. Identify and provide short snippet references (like function or class definitions, or key logic). 
-3. Please output your response in valid JSON with the fields "summary" and "snippets" (an array of snippet texts).
+    prompt_text = f"""You are an expert code reviewer. For the given code file, please:
+
+1. Provide a concise summary of its main purpose and functionality. If applicable, mention its role within the larger project or any interactions with other parts of the codebase.
+
+2. Identify and provide short code snippets (up to 5 lines each) that represent key elements, such as important function or class definitions, or critical logic. Focus on unique or significant parts of the code, avoiding trivial or boilerplate sections.
+
+3. Output your response in valid JSON format with the following fields:
+   - "summary": a string containing the summary
+   - "snippets": an array of strings, each being a code snippet
+
+Ensure that the summary and snippets together give a clear and informative overview of the code file.
 
 Code chunk:
 {chunk}"""
@@ -169,7 +176,7 @@ Code chunk:
             progress.update(progress.task_ids[-1], description="[yellow]🤔 Analyzing with AI...[/yellow]")
 
         completion = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o",
             messages=[
                 {"role": "user", "content": prompt_text}
             ]
